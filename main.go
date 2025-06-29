@@ -1,14 +1,15 @@
 package main
 
 import (
-	"image/color"
 	"log"
 	"os"
 
 	"gioui.org/app"
+	"gioui.org/layout"
 	"gioui.org/op"
-	"gioui.org/text"
+	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/snakesel/libretranslate"
 )
 
 func main() {
@@ -23,32 +24,70 @@ func main() {
 	app.Main()
 }
 
-
 func run(window *app.Window) error {
+	// Use the public LibreTranslate instance.
+	// For a production app, you would host your own instance.
+	translator := libretranslate.New(libretranslate.Config{
+		Url: "https://libretranslate.com",
+	})
+
 	theme := material.NewTheme()
-	var ops op.Ops
+
+	var (
+		ops          op.Ops
+		inputEditor  widget.Editor
+		outputEditor widget.Editor
+		translateBtn widget.Clickable
+		status       string
+	)
+
+	inputEditor.SetText("Hello world")
+	outputEditor.ReadOnly = true
+
 	for {
 		switch e := window.Event().(type) {
 		case app.DestroyEvent:
 			return e.Err
 		case app.FrameEvent:
-			// This graphics context is used for managing the rendering state.
 			gtx := app.NewContext(&ops, e)
 
-			// Define an large label with an appropriate text:
-			title := material.H1(theme, "Hello, Gio")
+			// Handle button clicks.
+			if translateBtn.Clicked(gtx) {
+				status = "Translating..."
+				// Run translation in a separate goroutine to avoid blocking the UI.
+				go func() {
+					inputText := inputEditor.Text()
 
-			// Change the color of the label.
-			maroon := color.NRGBA{R: 127, G: 0, B: 0, A: 255}
-			title.Color = maroon
+					// Translate from English to Spanish.
+					translatedText, err := translator.Translate(inputText, "en", "es")
+					if err != nil {
+						log.Printf("Translation error: %v", err)
+						status = "Error: " + err.Error()
+						window.Invalidate() // Request a redraw to show the error.
+						return
+					}
 
-			// Change the position of the label.
-			title.Alignment = text.Middle
+					status = "" // Clear status on success.
+					outputEditor.SetText(translatedText)
+					window.Invalidate() // Request a new frame to show the result.
+				}()
+			}
 
-			// Draw the label to the graphics context.
-			title.Layout(gtx)
+			// Define the layout.
+			layout.UniformInset(16).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{
+					Axis:    layout.Vertical,
+					Spacing: layout.SpaceBetween,
+				}.Layout(gtx,
+					layout.Flexed(0.5, material.Editor(theme, &inputEditor, "Text to translate (English)").Layout),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return layout.Inset{Top: 8, Bottom: 8}.Layout(gtx, material.Button(theme, &translateBtn, "Translate to Spanish").Layout)
+					}),
+					layout.Rigid(material.Body1(theme, status).Layout),
+					layout.Flexed(0.5, material.Editor(theme, &outputEditor, "Translation").Layout),
+				)
+			})
 
-			// Pass the drawing operations to the GPU.
 			e.Frame(gtx.Ops)
 		}
 	}

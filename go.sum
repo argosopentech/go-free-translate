@@ -9,6 +9,8 @@ github.com/go-text/typesetting v0.2.1 h1:x0jMOGyO3d1qFAPI0j4GSsh7M0Q3Ypjzr4+CEVg
 github.com/go-text/typesetting v0.2.1/go.mod h1:mTOxEwasOFpAMBjEQDhdWRckoLLeI/+qrQeBCTGEt6M=
 github.com/go-text/typesetting-utils v0.0.0-20241103174707-87a29e9e6066 h1:qCuYC+94v2xrb1PoS4NIDe7DGYtLnU2wWiQe9a1B1c0=
 github.com/go-text/typesetting-utils v0.0.0-20241103174707-87a29e9e6066/go.mod h1:DDxDdQEnB70R8owOx3LVpEFvpMK9eeH1o2r0yZhFI9o=
+github.com/snakesel/libretranslate v0.0.2 h1:6LG/UMMpGtoj3NXvlzsxZgQEH0Qsi62jCDd5Yq5ALL8=
+github.com/snakesel/libretranslate v0.0.2/go.mod h1:B8F8Dda8RlkHRMzs/aw8DWj9HfyHSXpaJTFD391hEUI=
 golang.org/x/exp v0.0.0-20240707233637-46b078467d37 h1:uLDX+AfeFCct3a2C7uIWBKMJIR3CJMhcgfrUAqjRK6w=
 golang.org/x/exp v0.0.0-20240707233637-46b078467d37/go.mod h1:M4RDyNAINzryxdtnbRXRL/OHtkFuWGRjvuhBJpk2IlY=
 golang.org/x/exp/shiny v0.0.0-20240707233637-46b078467d37 h1:SOSg7+sueresE4IbmmGM60GmlIys+zNX63d6/J4CMtU=
