@@ -29,8 +29,6 @@ var supportedLanguages = []Language{
 	{Code: "de", Name: "German"},
 	{Code: "zh", Name: "Chinese"},
 	{Code: "ru", Name: "Russian"},
-	{Code: "it", Name: "Italian"},
-	{Code: "ar", Name: "Arabic"},
 }
 
 func main() {
@@ -49,7 +47,7 @@ func run(window *app.Window) error {
 	// Use the public LibreTranslate instance.
 	// For a production app, you would host your own instance.
 	translator := libretranslate.New(libretranslate.Config{
-		Url: "https://libretranslate.de", // Using .de as .com can be less stable
+		Url: "http://localhost:5000",
 	})
 
 	theme := material.NewTheme()
