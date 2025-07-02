@@ -4,7 +4,11 @@ A translation application written in Golang using the [Gio UI graphics library](
 ![Screenshot](https://community.libretranslate.com/uploads/default/original/2X/5/51c09026e28b3c603b64d4bf83ec121b216bd874.png)
 
 ### Quickstart
+
 ```
+# First run a LibreTranslate instance at localhost:5000
+
+# Then
 git clone https://github.com/argosopentech/go-free-translate.git
 cd go-free-translate
 go run .
