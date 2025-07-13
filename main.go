@@ -53,15 +53,15 @@ func run(window *app.Window) error {
 	theme := material.NewTheme()
 
 	var (
-		ops             op.Ops
-		inputEditor     widget.Editor
-		outputEditor    widget.Editor
-		translateBtn    widget.Clickable
-		status          string
-		sourceLangEnum  widget.Enum
-		targetLangEnum  widget.Enum
-		sourceLangList  widget.List
-		targetLangList  widget.List
+		ops            op.Ops
+		inputEditor    widget.Editor
+		outputEditor   widget.Editor
+		translateBtn   widget.Clickable
+		status         string
+		sourceLangEnum widget.Enum
+		targetLangEnum widget.Enum
+		sourceLangList widget.List
+		targetLangList widget.List
 	)
 
 	// Set default selections and list orientation.
