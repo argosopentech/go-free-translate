@@ -13,7 +13,6 @@ import (
 	"github.com/snakesel/libretranslate"
 )
 
-// Language defines the structure for a supported language.
 type Language struct {
 	Code string
 	Name string
@@ -44,8 +43,7 @@ func main() {
 }
 
 func run(window *app.Window) error {
-	// Use the public LibreTranslate instance.
-	// For a production app, you would host your own instance.
+	// Use a local LibreTranslate instance.
 	translator := libretranslate.New(libretranslate.Config{
 		Url: "http://localhost:5000",
 	})
@@ -64,7 +62,6 @@ func run(window *app.Window) error {
 		targetLangList widget.List
 	)
 
-	// Set default selections and list orientation.
 	sourceLangEnum.Value = "en"
 	targetLangEnum.Value = "es"
 	sourceLangList.Axis = layout.Horizontal
@@ -80,77 +77,107 @@ func run(window *app.Window) error {
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, e)
 
-			// Handle button clicks.
 			if translateBtn.Clicked(gtx) {
 				status = "Translating..."
-				// Run translation in a separate goroutine to avoid blocking the UI.
 				go func() {
 					inputText := inputEditor.Text()
 					sourceCode := sourceLangEnum.Value
 					targetCode := targetLangEnum.Value
 
-					// Translate using selected languages.
 					translatedText, err := translator.Translate(inputText, sourceCode, targetCode)
 					if err != nil {
 						log.Printf("Translation error: %v", err)
 						status = "Error: " + err.Error()
-						window.Invalidate() // Request a redraw to show the error.
+						window.Invalidate()
 						return
 					}
 
-					status = "" // Clear status on success.
+					status = ""
 					outputEditor.SetText(translatedText)
-					window.Invalidate() // Request a new frame to show the result.
+					window.Invalidate()
 				}()
 			}
 
-			// Find the full names of the selected languages for the button label.
-			var sourceName, targetName string
-			for _, lang := range supportedLanguages {
-				if lang.Code == sourceLangEnum.Value {
-					sourceName = lang.Name
-				}
-				if lang.Code == targetLangEnum.Value {
-					targetName = lang.Name
-				}
-			}
-			buttonText := fmt.Sprintf("Translate from %s to %s", sourceName, targetName)
-
-			// Define the layout.
-			layout.UniformInset(16).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{
-					Axis: layout.Vertical,
-				}.Layout(gtx,
-					// Source Language Selector
-					layout.Rigid(material.Body1(theme, "From:").Layout),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return layout.Inset{Top: 4, Bottom: 8}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-							return material.List(theme, &sourceLangList).Layout(gtx, len(supportedLanguages), func(gtx layout.Context, i int) layout.Dimensions {
-								lang := supportedLanguages[i]
-								return layout.Inset{Right: 12}.Layout(gtx, material.RadioButton(theme, &sourceLangEnum, lang.Code, lang.Name).Layout)
-							})
-						})
-					}),
-					layout.Flexed(1, material.Editor(theme, &inputEditor, "Text to translate").Layout),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return layout.Inset{Top: 8, Bottom: 8}.Layout(gtx, material.Button(theme, &translateBtn, buttonText).Layout)
-					}),
-					// Target Language Selector
-					layout.Rigid(material.Body1(theme, "To:").Layout),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return layout.Inset{Top: 4, Bottom: 8}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-							return material.List(theme, &targetLangList).Layout(gtx, len(supportedLanguages), func(gtx layout.Context, i int) layout.Dimensions {
-								lang := supportedLanguages[i]
-								return layout.Inset{Right: 12}.Layout(gtx, material.RadioButton(theme, &targetLangEnum, lang.Code, lang.Name).Layout)
-							})
-						})
-					}),
-					layout.Rigid(material.Body1(theme, status).Layout),
-					layout.Flexed(1, material.Editor(theme, &outputEditor, "Translation").Layout),
-				)
-			})
+			layoutUI(gtx, theme, &inputEditor, &outputEditor, &translateBtn,
+				&sourceLangEnum, &targetLangEnum, &sourceLangList, &targetLangList, status)
 
 			e.Frame(gtx.Ops)
 		}
 	}
+}
+
+func layoutUI(
+	gtx layout.Context,
+	theme *material.Theme,
+	inputEditor, outputEditor *widget.Editor,
+	translateBtn *widget.Clickable,
+	sourceLangEnum, targetLangEnum *widget.Enum,
+	sourceLangList, targetLangList *widget.List,
+	status string,
+) layout.Dimensions {
+	return layout.UniformInset(16).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{
+			Axis: layout.Vertical,
+		}.Layout(gtx,
+			layout.Rigid(material.Body1(theme, "From:").Layout),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return sourceLangSelector(gtx, theme, sourceLangEnum, sourceLangList)
+			}),
+			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+				return inputEditorSection(gtx, theme, inputEditor)
+			}),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return translateButton(gtx, theme, translateBtn, sourceLangEnum.Value, targetLangEnum.Value)
+			}),
+			layout.Rigid(material.Body1(theme, "To:").Layout),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return targetLangSelector(gtx, theme, targetLangEnum, targetLangList)
+			}),
+			layout.Rigid(material.Body1(theme, status).Layout),
+			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+				return outputEditorSection(gtx, theme, outputEditor)
+			}),
+		)
+	})
+}
+
+
+func sourceLangSelector(gtx layout.Context, theme *material.Theme, enum *widget.Enum, list *widget.List) layout.Dimensions {
+	return layout.Inset{Top: 4, Bottom: 8}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return material.List(theme, list).Layout(gtx, len(supportedLanguages), func(gtx layout.Context, i int) layout.Dimensions {
+			lang := supportedLanguages[i]
+			return layout.Inset{Right: 12}.Layout(gtx, material.RadioButton(theme, enum, lang.Code, lang.Name).Layout)
+		})
+	})
+}
+
+func targetLangSelector(gtx layout.Context, theme *material.Theme, enum *widget.Enum, list *widget.List) layout.Dimensions {
+	return layout.Inset{Top: 4, Bottom: 8}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return material.List(theme, list).Layout(gtx, len(supportedLanguages), func(gtx layout.Context, i int) layout.Dimensions {
+			lang := supportedLanguages[i]
+			return layout.Inset{Right: 12}.Layout(gtx, material.RadioButton(theme, enum, lang.Code, lang.Name).Layout)
+		})
+	})
+}
+
+func inputEditorSection(gtx layout.Context, theme *material.Theme, editor *widget.Editor) layout.Dimensions {
+	return material.Editor(theme, editor, "Text to translate").Layout(gtx)
+}
+
+func outputEditorSection(gtx layout.Context, theme *material.Theme, editor *widget.Editor) layout.Dimensions {
+	return material.Editor(theme, editor, "Translation").Layout(gtx)
+}
+
+func translateButton(gtx layout.Context, theme *material.Theme, btn *widget.Clickable, sourceCode string, targetCode string) layout.Dimensions {
+	var sourceName, targetName string
+	for _, lang := range supportedLanguages {
+		if lang.Code == sourceCode {
+			sourceName = lang.Name
+		}
+		if lang.Code == targetCode {
+			targetName = lang.Name
+		}
+	}
+	buttonText := fmt.Sprintf("Translate from %s to %s", sourceName, targetName)
+	return layout.Inset{Top: 8, Bottom: 8}.Layout(gtx, material.Button(theme, btn, buttonText).Layout)
 }
